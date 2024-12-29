@@ -2,6 +2,8 @@
 
 A lightweight, personal dashboard for monitoring your locally running Ollama models. Built with Flask and designed for simplicity.
 
+![Screenshot of Ollama Process Status UI](static/screenshot.png)
+
 ## Purpose
 
 Ollama Watch provides a clean, minimal web interface to:
