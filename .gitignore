@@ -52,3 +52,6 @@ venv.bak/
 .env.development.local
 .env.test.local
 .env.production.local 
+
+# Project specific
+history.json

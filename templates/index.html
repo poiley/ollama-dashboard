@@ -49,11 +49,11 @@
             background: linear-gradient(45deg, #c2c8d0, #ffffff);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 2rem;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 1rem;
+            margin-bottom: 0;
         }
         .title-logo {
             width: 2.8rem;
@@ -139,16 +139,150 @@
             align-items: center;
             padding-right: 4rem;
         }
+        /* Sidebar styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -400px; /* Start hidden */
+            width: 400px;
+            height: 100vh;
+            background-color: rgba(34, 38, 44, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .sidebar.show {
+            right: 0;
+        }
+        
+        .history-item {
+            background-color: rgba(45, 51, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            transition: transform 0.2s ease;
+        }
+        
+        .history-item:hover {
+            transform: translateY(-2px);
+        }
+        
+        .history-time {
+            color: #8b949e;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        
+        .history-content {
+            color: #e1e1e1;
+        }
+        
+        .sidebar-header {
+            font-size: 1.8rem;
+            color: #e1e1e1;
+            margin: 15px 0 25px;
+            padding: 0 20px;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .sidebar-header::after {
+            content: '';
+            position: absolute;
+            bottom: -12px;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(60, 65, 70, 0.5);
+            color: #e1e1e1;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .toggle-button:hover {
+            background: rgba(80, 85, 90, 0.5);
+        }
+
+        .sidebar.show + .toggle-button {
+            right: 420px;  /* 400px sidebar width + 20px margin */
+        }
+
+        .history-model {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .history-version {
+            font-size: 0.85rem;
+            background: #2d333b;
+            color: #8b949e;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            position: absolute;
+            top: 0;
+            right: 0;
+            border: 1px solid #444c56;
+        }
+
+        .history-duration {
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .history-model:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .history-detail {
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-top: 2px;
+        }
     </style>
 </head>
 <body>
     <div class="container py-5">
-        <h1 class="text-center page-title">
-            <div class="title-logo">
-                <img src="{{ url_for('static', filename='ollama-logo.png') }}" alt="Ollama">
-            </div>
-            Ollama Dashboard
-        </h1>
+        <div class="title-container">
+            <h1 class="text-center page-title">
+                <div class="title-logo">
+                    <img src="{{ url_for('static', filename='ollama-logo.png') }}" alt="Ollama">
+                </div>
+                Ollama Dashboard
+            </h1>
+        </div>
         
         <div class="refresh-indicator mb-4">
             <div class="dot"></div>
@@ -156,13 +290,6 @@
         </div>
 
         <script>
-            function getTimezoneAbbr() {
-                const date = new Date();
-                const options = { timeZoneName: 'short' };
-                const parts = date.toLocaleDateString(undefined, options).split(' ');
-                return parts[parts.length - 1];
-            }
-
             function updateTimes() {
                 const now = new Date();
                 const timeStr = now.toLocaleTimeString(undefined, {
@@ -170,7 +297,7 @@
                     minute: '2-digit',
                     hour12: true
                 });
-                const tzAbbr = getTimezoneAbbr();
+                const tzAbbr = '{{ timezone }}';
                 document.getElementById('lastUpdate').textContent = `${timeStr} ${tzAbbr}`;
                 
                 let seconds = 30;
@@ -199,12 +326,12 @@
                                 <span class="model-icon">🧠</span>
                                 {{ model.name.split(':')[0] }}
                             </div>
-                            <span class="model-version">{{ model.name.split(':')[1] }}</span>
+                            <span class="model-version">{{ model.name.split(':')[1] if ':' in model.name else 'No Version' }}</span>
                         </h5>
                         <div class="detail-item">
                             <span class="detail-icon">👥</span>
-                            <span class="detail-label">Family: </span>
-                            <span class="detail-value ms-1">{{ model.details.family }}</span>
+                            <span class="detail-label">{{ 'Families:' if ',' in model.families_str else 'Family:' }} </span>
+                            <span class="detail-value ms-1">{{ model.families_str }}</span>
                         </div>
                         <div class="detail-item">
                             <span class="detail-icon">⚡</span>
@@ -219,7 +346,7 @@
                         <div class="detail-item">
                             <span class="detail-icon">💾</span>
                             <span class="detail-label">Size: </span>
-                            <span class="detail-value ms-1">{{ "%.2f"|format(model.size / 1024 / 1024 / 1024) }} GB</span>
+                            <span class="detail-value ms-1">{{ model.formatted_size }}</span>
                         </div>
                         {% if model.expires_at %}
                         <div class="expires-section">
@@ -246,6 +373,55 @@
             {% endif %}
         </div>
     </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            History
+        </div>
+        <div id="history-container">
+            {% for entry in history %}
+            <div class="history-item">
+                <div class="history-time">
+                    {{ entry.timestamp|datetime }}
+                </div>
+                <div class="history-content">
+                    {% for model in entry.models %}
+                    <div class="history-model">
+                        <strong>{{ model.name.split(':')[0] }}</strong>
+                        <span class="history-version">{{ model.name.split(':')[1] if ':' in model.name else 'No Version' }}</span>
+                        {% if model.families %}
+                        <div class="history-detail">{{ model.families }}</div>
+                        {% endif %}
+                        {% if model.parameter_size %}
+                        <div class="history-detail">{{ model.parameter_size }}</div>
+                        {% endif %}
+                        {% if model.size %}
+                        <div class="history-detail">{{ model.size }}</div>
+                        {% endif %}
+                        <div class="history-duration">
+                            <span class="detail-icon">⏱️</span>
+                            Active for {{ entry.timestamp|time_ago }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <button class="toggle-button" onclick="toggleSidebar()" id="toggleButton">
+        📋
+    </button>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const toggleButton = document.getElementById('toggleButton');
+            sidebar.classList.toggle('show');
+            toggleButton.innerHTML = sidebar.classList.contains('show') ? '✕' : '📋';
+        }
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
