@@ -120,9 +120,13 @@ def home():
             })
             save_history(history)
                 
+    except requests.exceptions.ConnectionError:
+        models = []
+        error_message = "Cannot connect to Ollama server. Is it running?"
+        return render_template('index.html', models=models, error=error_message)
     except Exception as e:
         models = []
-        error_message = str(e)
+        error_message = f"Error connecting to Ollama: {str(e)}"
         return render_template('index.html', models=models, error=error_message)
 
     return render_template('index.html', models=models, error=None, history=list(history))
@@ -150,6 +154,48 @@ def time_ago(value):
         return f"{int(minutes)} {'minute' if int(minutes) == 1 else 'minutes'}"
     else:
         return "less than a minute"
+
+@app.route('/test/no-models')
+def test_no_models():
+    """Test the empty state when Ollama is running but no models are active"""
+    return render_template('index.html', models=[], error=None, timezone=get_timezone_abbr())
+
+@app.route('/test/error')
+def test_error():
+    """Test the error state when Ollama is not running"""
+    error_message = "Cannot connect to Ollama server. Is it running?"
+    return render_template('index.html', models=[], error=error_message, timezone=get_timezone_abbr())
+
+@app.route('/test/with-models')
+def test_with_models():
+    """Test with sample running models"""
+    sample_models = [
+        {
+            "name": "mistral:latest",
+            "formatted_size": "4.82 GB",
+            "families_str": "mistral, llama",
+            "details": {
+                "family": "mistral",
+                "parameter_size": "7B",
+                "quantization_level": "Q4_0"
+            },
+            "expires_at": {
+                "local": "2:44 PM, Dec 29 (PST)",
+                "relative": "about 2 hours"
+            }
+        },
+        {
+            "name": "llama2:13b",
+            "formatted_size": "7.23 GB",
+            "families_str": "llama",
+            "details": {
+                "family": "llama",
+                "parameter_size": "13B",
+                "quantization_level": "Q4_K_M"
+            }
+        }
+    ]
+    return render_template('index.html', models=sample_models, error=None, timezone=get_timezone_abbr())
 
 # Run the Flask app
 if __name__ == '__main__':

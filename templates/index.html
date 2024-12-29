@@ -113,7 +113,7 @@
         .refresh-indicator .dot {
             width: 8px;
             height: 8px;
-            background-color: #4caf50;
+            background-color: var(--status-color, #4caf50);
             border-radius: 50%;
             animation: pulse 2s infinite;
         }
@@ -271,6 +271,43 @@
             color: #8b949e;
             margin-top: 2px;
         }
+
+        .no-models-message {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            background: rgba(45, 51, 59, 0.8);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .no-models-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .no-models-text {
+            color: #e1e1e1;
+            font-size: 1.1rem;
+            text-align: center;
+        }
+
+        .no-models-subtext {
+            color: #8b949e;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .refresh-indicator.error .dot {
+            --status-color: #dc3545;
+        }
+
+        .text-muted {
+            color: #8b949e !important;
+        }
     </style>
 </head>
 <body>
@@ -284,7 +321,7 @@
             </h1>
         </div>
         
-        <div class="refresh-indicator mb-4">
+        <div class="refresh-indicator mb-4 {% if error %}error{% endif %}">
             <div class="dot"></div>
             <span>Last updated: <span id="lastUpdate"></span> • Next refresh in <span id="nextRefresh">30</span>s</span>
         </div>
@@ -317,6 +354,7 @@
         {% endif %}
 
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% if not error %}
             {% for model in models %}
             <div class="col">
                 <div class="card h-100 shadow-sm model-card">
@@ -364,12 +402,18 @@
             {% endfor %}
             
             {% if not models %}
-            <div class="col-12 text-center mt-5">
-                <p class="text-muted">
-                    <span style="font-size: 3rem;">🔍</span><br>
-                    No models currently running
-                </p>
+            <div class="col-12">
+                <div class="no-models-message">
+                    <div class="no-models-icon">🔍</div>
+                    <div class="no-models-text">
+                        No models currently running
+                        <div class="no-models-subtext">
+                            Start a model to see it appear here
+                        </div>
+                    </div>
+                </div>
             </div>
+            {% endif %}
             {% endif %}
         </div>
     </div>
