@@ -16,13 +16,19 @@ HISTORY_FILE = 'history.json'
 MAX_HISTORY = 50
 
 def load_history():
+    """Load history from file or create new if doesn't exist"""
     try:
         if os.path.exists(HISTORY_FILE):
             with open(HISTORY_FILE, 'r') as f:
                 history = json.load(f)
                 return deque(history, maxlen=MAX_HISTORY)
-        return deque(maxlen=MAX_HISTORY)
-    except:
+        else:
+            # Create new history file with empty array
+            with open(HISTORY_FILE, 'w') as f:
+                json.dump([], f)
+            return deque(maxlen=MAX_HISTORY)
+    except Exception as e:
+        print(f"Error handling history file: {str(e)}")
         return deque(maxlen=MAX_HISTORY)
 
 def save_history(history):
