@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="30">
+    <title>Ollama Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a1d21;
+            color: #e1e1e1;
+        }
+        .model-card {
+            transition: all 0.3s ease;
+            background-color: #22262c;
+            border: 1px solid #2d3339;
+            border-radius: 12px;
+            position: relative;
+        }
+        .model-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        }
+        .card-title {
+            color: #ffffff;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        .detail-label {
+            color: #8b949e;
+            font-size: 0.9rem;
+        }
+        .local-time-label {
+            color: #8b949e;
+            font-size: 0.75rem;
+            font-style: italic;
+            opacity: 0.8;
+        }
+        .detail-value {
+            color: #e1e1e1;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #c2c8d0, #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .title-logo {
+            width: 2.8rem;
+            height: 2.8rem;
+            background: white;
+            border-radius: 50%;
+            padding: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .title-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .model-icon {
+            font-size: 1.8rem;
+            margin-right: 0.5rem;
+            vertical-align: middle;
+        }
+        .detail-item {
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        .detail-icon {
+            margin-right: 0.5rem;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+        .alert-danger {
+            background-color: #3d1f1f;
+            border-color: #842029;
+            color: #ea868f;
+        }
+        .detail-relative {
+            font-size: 0.85rem;
+            color: #8b949e;
+            margin-top: 2px;
+            text-align: right;
+            padding-right: 1rem;
+        }
+        .expires-section {
+            border-top: 1px solid #2d3339;
+            margin-top: 1rem;
+            padding-top: 1rem;
+        }
+        .refresh-indicator {
+            font-size: 0.85rem;
+            color: #8b949e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .refresh-indicator .dot {
+            width: 8px;
+            height: 8px;
+            background-color: #4caf50;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+        .model-version {
+            font-size: 0.9rem;
+            background: #2d333b;
+            color: #8b949e;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            font-weight: 500;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            border: 1px solid #444c56;
+        }
+        .model-name {
+            display: inline-flex;
+            align-items: center;
+            padding-right: 4rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="text-center page-title">
+            <div class="title-logo">
+                <img src="{{ url_for('static', filename='ollama-logo.png') }}" alt="Ollama">
+            </div>
+            Ollama Dashboard
+        </h1>
+        
+        <div class="refresh-indicator mb-4">
+            <div class="dot"></div>
+            <span>Last updated: <span id="lastUpdate"></span> • Next refresh in <span id="nextRefresh">30</span>s</span>
+        </div>
+
+        <script>
+            function getTimezoneAbbr() {
+                const date = new Date();
+                const options = { timeZoneName: 'short' };
+                const parts = date.toLocaleDateString(undefined, options).split(' ');
+                return parts[parts.length - 1];
+            }
+
+            function updateTimes() {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString(undefined, {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                const tzAbbr = getTimezoneAbbr();
+                document.getElementById('lastUpdate').textContent = `${timeStr} ${tzAbbr}`;
+                
+                let seconds = 30;
+                const countdown = setInterval(() => {
+                    seconds--;
+                    document.getElementById('nextRefresh').textContent = seconds;
+                    if (seconds <= 0) clearInterval(countdown);
+                }, 1000);
+            }
+            updateTimes();
+        </script>
+
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+            <span class="detail-icon">⚠️</span> {{ error }}
+        </div>
+        {% endif %}
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for model in models %}
+            <div class="col">
+                <div class="card h-100 shadow-sm model-card">
+                    <div class="card-body">
+                        <h5 class="card-title">
+                            <div class="model-name">
+                                <span class="model-icon">🧠</span>
+                                {{ model.name.split(':')[0] }}
+                            </div>
+                            <span class="model-version">{{ model.name.split(':')[1] }}</span>
+                        </h5>
+                        <div class="detail-item">
+                            <span class="detail-icon">👥</span>
+                            <span class="detail-label">Family: </span>
+                            <span class="detail-value ms-1">{{ model.details.family }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">⚡</span>
+                            <span class="detail-label">Parameters: </span>
+                            <span class="detail-value ms-1">{{ model.details.parameter_size }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">🔧</span>
+                            <span class="detail-label">Quantization: </span>
+                            <span class="detail-value ms-1">{{ model.details.quantization_level }}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">💾</span>
+                            <span class="detail-label">Size: </span>
+                            <span class="detail-value ms-1">{{ "%.2f"|format(model.size / 1024 / 1024 / 1024) }} GB</span>
+                        </div>
+                        {% if model.expires_at %}
+                        <div class="expires-section">
+                            <div class="detail-item">
+                                <span class="detail-icon">⏰</span>
+                                <span class="detail-label">Expires: </span>
+                                <span class="detail-value ms-1">{{ model.expires_at.local }}</span>
+                            </div>
+                            <div class="detail-relative">{{ model.expires_at.relative }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if not models %}
+            <div class="col-12 text-center mt-5">
+                <p class="text-muted">
+                    <span style="font-size: 3rem;">🔍</span><br>
+                    No models currently running
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
