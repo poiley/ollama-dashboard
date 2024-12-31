@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      - OLLAMA_HOST=host.docker.internal
+      - OLLAMA_PORT=11434
+      - FLASK_APP=wsgi.py
+    networks:
+      - app_network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ../history.json:/app/history.json
+      - ../app/static:/app/app/static:ro
+      - ../app/templates:/app/app/templates:ro
+
+networks:
+  app_network:
+    driver: bridge 

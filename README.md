@@ -2,7 +2,7 @@
 
 A lightweight, personal dashboard for monitoring your locally running Ollama models. Built with Flask and designed for simplicity.
 
-![Screenshot of Ollama Process Status UI](static/screenshot.png)
+![Screenshot of Ollama Process Status UI](app/static/screenshot.png)
 
 ## Purpose
 
@@ -23,6 +23,7 @@ Ollama Dashboard provides a clean, minimal web interface to:
 - 📋 Model history tracking
 - 🕒 Real-time status indicators
 - 0️⃣ Zero configuration needed
+- 🐳 Docker support
 
 ### Dashboard Features
 
@@ -45,10 +46,13 @@ Ollama Dashboard provides a clean, minimal web interface to:
 
 ## Prerequisites
 
-- Python 3.x
+- Python 3.x (for local installation)
+- Docker (for containerized installation)
 - Ollama running locally
 
-## Quick Start
+## Installation Options
+
+### Option 1: Local Installation
 
 1. Clone the repository:
 
@@ -66,13 +70,56 @@ pip install -r requirements.txt
 3. Run the dashboard:
 
 ```bash
-python main.py
+python wsgi.py
 ```
 
-4. Open your browser and visit `http://localhost:5000`
+### Option 2: Docker Installation (Recommended)
 
+1. Clone the repository:
 
-## Testing
+```bash
+git clone https://github.com/poiley/ollama-dashboard.git
+cd ollama-dashboard
+```
+
+2. Build and run using the provided script:
+
+```bash
+./scripts/build.sh
+```
+
+The dashboard will be available at http://127.0.0.1:5000
+
+## Configuration
+
+The dashboard can be configured using environment variables:
+
+- `OLLAMA_HOST`: Ollama server host (default: localhost)
+- `OLLAMA_PORT`: Ollama server port (default: 11434)
+- `MAX_HISTORY`: Maximum number of history entries to keep (default: 50)
+- `HISTORY_FILE`: Path to history file (default: history.json)
+
+When running with Docker, these are pre-configured in the `docker-compose.yml` file.
+
+## Troubleshooting
+
+### Common Issues
+
+1. **403 Forbidden Error**
+   - Ensure Ollama is running on your host machine
+   - Check that port 11434 is accessible
+   - Verify your firewall settings allow the connection
+
+2. **Connection Errors**
+   - When using Docker, the dashboard uses `host.docker.internal` to connect to Ollama
+   - Ensure Ollama is running before starting the dashboard
+   - Check the Ollama logs for any connection issues
+
+3. **Static Files Not Loading**
+   - Clear your browser cache
+   - Try accessing the dashboard using 127.0.0.1 instead of localhost
+
+### Testing Routes
 
 The dashboard includes test routes to preview different states:
 
@@ -83,3 +130,10 @@ The dashboard includes test routes to preview different states:
 ## Note
 
 This is a personal utility tool designed for individual use. It's intentionally kept simple and assumes Ollama is running on the same machine. Perfect for developers who want a quick visual overview of their currently running Ollama models.
+
+## Accessing the Dashboard
+
+The dashboard is available at:
+- Web Interface: http://127.0.0.1:5000
+
+Note: Please use the IP address (127.0.0.1) rather than localhost to access the dashboard.

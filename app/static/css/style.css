@@ -1,0 +1,16 @@
+/* Base styles */
+body {
+    background-color: #1a1d21;
+    color: #e1e1e1;
+}
+
+/* Card styles */
+.model-card {
+    transition: all 0.3s ease;
+    background-color: #22262c;
+    border: 1px solid #2d3339;
+    border-radius: 12px;
+    position: relative;
+}
+
+/* ... (continuing with all CSS from index.html) ... */ 

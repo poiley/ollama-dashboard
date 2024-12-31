@@ -51,7 +51,12 @@ venv.bak/
 .env.local
 .env.development.local
 .env.test.local
-.env.production.local 
+.env.production.local
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Project specific
 history.json
